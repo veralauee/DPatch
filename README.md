@@ -5,7 +5,7 @@ Please refer to the paper https://arxiv.org/abs/1806.02299
 
 
 ## Installation
-1. Please install PyTorch following the instuctions on the official website.
+1. Please install PyTorch following the instuctions on the official website. The version here should be 0.4.0 
    ```bash
     conda install pytorch torchvision -c pytorch
     ```
