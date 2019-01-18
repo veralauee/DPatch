@@ -16,6 +16,8 @@ parser = argparse.ArgumentParser(description='PyTorch Yolo')
 parser.add_argument('--image_size_index', type=int, default=0,
                     metavar='image_size_index',
                     help='setting images size index 0:320, 1:352, 2:384, 3:416, 4:448, 5:480, 6:512, 7:544, 8:576')
+
+parser.add_argument('--attack', help='target | untarget attack', type=str, default=None)
 args = parser.parse_args()
 
 
@@ -23,8 +25,9 @@ args = parser.parse_args()
 # ------------
 imdb_name = cfg.imdb_test
 # trained_model = cfg.trained_model
-trained_model = os.path.join(cfg.train_output_dir,
-                             'darknet19_voc07trainval_exp3_73.h5')
+#trained_model = os.path.join(cfg.train_output_dir,
+#                             'darknet19_voc07trainval_exp3_73.h5')
+trained_model = "yolo-voc.weights.h5"
 output_dir = cfg.test_output_dir
 
 max_per_image = 300
@@ -55,7 +58,7 @@ def test_net(net, imdb, max_per_image=300, thresh=0.5, vis=False):
                                            volatile=True).permute(0, 3, 1, 2)
 
         _t['im_detect'].tic()
-        bbox_pred, iou_pred, prob_pred = net(im_data)
+        bbox_pred, iou_pred, prob_pred = net(im_data, attack=args.attack)
 
         # to numpy
         bbox_pred = bbox_pred.data.cpu().numpy()
@@ -128,7 +131,7 @@ if __name__ == '__main__':
                       yolo_utils.preprocess_test,
                       processes=1, shuffle=False, dst_size=cfg.multi_scale_inp_size)
 
-    net = Darknet19()
+    net = Darknet19(training=False)
     net_utils.load_net(trained_model, net)
 
     net.cuda()

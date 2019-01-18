@@ -6,7 +6,7 @@ start_step = 0
 lr_decay_epochs = {60, 90}
 lr_decay = 1./10
 
-max_epoch = 160
+max_epoch = 100
 
 weight_decay = 0.0005
 momentum = 0.9

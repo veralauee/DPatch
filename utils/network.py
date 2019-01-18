@@ -58,13 +58,20 @@ def save_net(fname, net):
     for k, v in list(net.state_dict().items()):
         h5f.create_dataset(k, data=v.cpu().numpy())
 
-
-def load_net(fname, net):
+def load_net(fname, net, with_patch=False):
     import h5py
     h5f = h5py.File(fname, mode='r')
-    for k, v in list(net.state_dict().items()):
-        param = torch.from_numpy(np.asarray(h5f[k]))
-        v.copy_(param)
+    if with_patch:
+        for k, v in list(net.state_dict().items()):
+          param = torch.from_numpy(np.asarray(h5f[k]))
+          v.copy_(param)
+    else:
+        print("initial model without patch")
+        for k, v in list(net.state_dict().items()):
+          if k == 'patch':
+            continue
+          param = torch.from_numpy(np.asarray(h5f[k]))
+          v.copy_(param)
 
 
 def load_pretrained_npy(faster_rcnn_model, fname):

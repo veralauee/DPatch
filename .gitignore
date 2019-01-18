@@ -8,7 +8,17 @@ __pycache__/
 # C extensions
 *.so
 
+*.pyc
+*.npy
+*.jpg
+*.h5
+yolo-voc.weights.h5
+
 # Distribution / packaging
+demo_backup/
+models/
+trained_patch/
+data/
 .Python
 env/
 build/

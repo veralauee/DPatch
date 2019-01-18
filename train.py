@@ -11,6 +11,8 @@ from utils.timer import Timer
 import cfgs.config as cfg
 from random import randint
 
+from patch import *
+
 try:
     from tensorboardX import SummaryWriter
 except ImportError:
@@ -26,19 +28,22 @@ print('load data succ...')
 
 net = Darknet19()
 # net_utils.load_net(cfg.trained_model, net)
-# pretrained_model = os.path.join(cfg.train_output_dir,
-#     'darknet19_voc07trainval_exp1_63.h5')
-# pretrained_model = cfg.trained_model
-# net_utils.load_net(pretrained_model, net)
-net.load_from_npz(cfg.pretrained_model, num_conv=18)
+#pretrained_model = os.path.join(cfg.train_output_dir,
+#                  'darknet19_voc07trainval_exp3_79.h5')
+pretrained_model = 'yolo-voc.weights.h5'
+
+# training from scratch: with_patch=False
+# continue training or testing: with_patch=True
+net_utils.load_net(pretrained_model, net, with_patch=False) 
+#net.load_from_npz(cfg.pretrained_model, num_conv=18)
 net.cuda()
 net.train()
 print('load net succ...')
 
 # optimizer
 start_epoch = 0
-lr = cfg.init_learning_rate
-optimizer = torch.optim.SGD(net.parameters(), lr=lr, momentum=cfg.momentum,
+lr = 1e-2
+optimizer = torch.optim.SGD([net.patch], lr=lr, momentum=cfg.momentum,
                             weight_decay=cfg.weight_decay)
 
 # tensorboad
@@ -56,9 +61,16 @@ cnt = 0
 t = Timer()
 step_cnt = 0
 size_index = 0
+
 for step in range(start_epoch * imdb.batch_per_epoch,
                   cfg.max_epoch * imdb.batch_per_epoch):
     t.tic()
+    if step % imdb.batch_per_epoch == 0:
+        print('-----------save %d patch to ------------'%step)
+        save_patch(net.patch, step)
+        print(net.patch)
+        print('\n')
+
     # batch
     batch = imdb.next_batch(size_index)
     im = batch['images']
@@ -66,7 +78,18 @@ for step in range(start_epoch * imdb.batch_per_epoch,
     gt_classes = batch['gt_classes']
     dontcare = batch['dontcare']
     orgin_im = batch['origin_im']
-
+    
+    # reset patch class here 
+    for g, gt_cls in enumerate(gt_classes):
+       for c,the_cls in enumerate(gt_cls):
+           gt_classes[g][c] = cfg.target_class
+    
+    #print('gt_boxes', gt_boxes)
+    # reset patch bbox here
+    #for g, gt_box in enumerate(gt_boxes):
+    #   for b, bbox in enumerate(gt_box):
+    #       gt_boxes[g][b] = [cfg.patch_x, cfg.patch_y, cfg.patch_x+cfg.patch_w, cfg.patch_y+cfg.patch_h]
+    
     # forward
     im_data = net_utils.np_to_variable(im,
                                        is_cuda=True,
@@ -75,10 +98,10 @@ for step in range(start_epoch * imdb.batch_per_epoch,
 
     # backward
     loss = net.loss
-    bbox_loss += net.bbox_loss.data.cpu().numpy()[0]
-    iou_loss += net.iou_loss.data.cpu().numpy()[0]
-    cls_loss += net.cls_loss.data.cpu().numpy()[0]
-    train_loss += loss.data.cpu().numpy()[0]
+    bbox_loss += net.bbox_loss.data.cpu()#.numpy()[0]
+    iou_loss += net.iou_loss.data.cpu()#.numpy()[0]
+    cls_loss += net.cls_loss.data.cpu()#.numpy()[0]
+    train_loss += loss.data.cpu()#.numpy()[0]
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
@@ -111,7 +134,7 @@ for step in range(start_epoch * imdb.batch_per_epoch,
             bboxes, scores, cls_inds = yolo_utils.postprocess(
                 bbox_pred, iou_pred, prob_pred, image.shape, cfg, thresh=0.3, size_index=size_index)
             im2show = yolo_utils.draw_detection(image, bboxes, scores, cls_inds, cfg)
-            summary_writer.add_image('predict', im2show, step)
+            #summary_writer.add_image('predict', im2show, step)
 
         train_loss = 0
         bbox_loss, iou_loss, cls_loss = 0., 0., 0.
@@ -123,7 +146,8 @@ for step in range(start_epoch * imdb.batch_per_epoch,
     if step > 0 and (step % imdb.batch_per_epoch == 0):
         if imdb.epoch in cfg.lr_decay_epochs:
             lr *= cfg.lr_decay
-            optimizer = torch.optim.SGD(net.parameters(), lr=lr,
+            print("learning rate", lr)
+            optimizer = torch.optim.SGD([net.patch], lr=lr,
                                         momentum=cfg.momentum,
                                         weight_decay=cfg.weight_decay)
 

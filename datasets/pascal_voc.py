@@ -152,18 +152,30 @@ class VOCDataset(ImageDataset):
         # Load object bounding boxes into a data frame.
         for ix, obj in enumerate(objs):
             bbox = obj.find('bndbox')
+            
             # Make pixel indexes 0-based
             x1 = float(bbox.find('xmin').text) - 1
             y1 = float(bbox.find('ymin').text) - 1
             x2 = float(bbox.find('xmax').text) - 1
             y2 = float(bbox.find('ymax').text) - 1
+            
+            # ''' define patch bbox here '''
+            #x1 = cfg.patch_x
+            #y1 = cfg.patch_y
+            #x2 = cfg.patch_x + cfg.patch_w
+            #y2 = cfg.patch_y + cfg.patch_h
 
             diffc = obj.find('difficult')
             difficult = 0 if diffc is None else int(diffc.text)
             ishards[ix] = difficult
 
-            cls = self._class_to_ind[obj.find('name').text.lower().strip()]
+            #cls = self._class_to_ind[obj.find('name').text.lower().strip()]
+            ''' modify ground truth '''
+            cls = cfg.target_class
+
             boxes[ix, :] = [x1, y1, x2, y2]
+            #boxes[ix, :] = [0., 0., 120., 120.]
+
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0
             seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)

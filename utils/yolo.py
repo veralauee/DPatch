@@ -169,6 +169,7 @@ def _bbox_targets_perimage(im_shape, gt_boxes, cls_inds, dontcare_areas, cfg):
     # anchors = cfg.anchors
     H, W = cfg.out_size
     gt_boxes = np.asarray(gt_boxes, dtype=np.float)
+
     # TODO: dontcare areas
     dontcare_areas = np.asarray(dontcare_areas, dtype=np.float)
 
@@ -193,6 +194,7 @@ def _bbox_targets_perimage(im_shape, gt_boxes, cls_inds, dontcare_areas, cfg):
     for i, ind in enumerate(cell_inds):
         bbox_target[ind].append(gt_boxes[i])
         cls_target[ind].append(cls_inds[i])
+
     return bbox_target, cls_target
 
 

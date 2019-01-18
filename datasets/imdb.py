@@ -69,6 +69,10 @@ class ImageDataset(object):
                     gt_boxes[:, 0::2] *= float(w) / images.shape[1]
                     gt_boxes[:, 1::2] *= float(h) / images.shape[0]
                 images = cv2.resize(images, (w, h))
+                
+                ''' redefine ground truth here '''
+                gt_boxes = [[cfg.patch_x, cfg.patch_y, cfg.patch_w+cfg.patch_x, cfg.patch_h+cfg.patch_y]]
+                classes = [[cfg.target_class]]
 
                 batch['images'].append(images)
                 batch['gt_boxes'].append(gt_boxes)

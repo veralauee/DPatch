@@ -1,4 +1,5 @@
 import os
+import argparse
 import cv2
 import numpy as np
 from torch.multiprocessing import Pool
@@ -14,6 +15,9 @@ import cfgs.config as cfg
 # See https://github.com/pytorch/pytorch/issues/1355.
 cv2.setNumThreads(0)
 
+parser = argparse.ArgumentParser(description='DPatch attack')
+parser.add_argument('--attack', help='target | untarget attack', type=str, default=None)
+args = parser.parse_args()
 
 def preprocess(fname):
     # return fname
@@ -26,11 +30,11 @@ def preprocess(fname):
 # hyper-parameters
 # npz_fname = 'models/yolo-voc.weights.npz'
 # h5_fname = 'models/yolo-voc.weights.h5'
-trained_model = cfg.trained_model
+trained_model = '/home/zwliu/FashionComp/adpatch/DPatch/yolo2-pytorch_backup/yolo-voc.weights.h5' #cfg.trained_model
 # trained_model = os.path.join(
 #     cfg.train_output_dir, 'darknet19_voc07trainval_exp3_158.h5')
 thresh = 0.5
-im_path = 'demo'
+im_path = 'demo/patch'
 # ---
 
 net = Darknet19()
@@ -43,19 +47,21 @@ print('load model succ...')
 
 t_det = Timer()
 t_total = Timer()
-im_fnames = sorted((fname
-                    for fname in os.listdir(im_path)
-                    if os.path.splitext(fname)[-1] == '.jpg'))
+im_fnames = sorted(fname
+                    for fname in os.listdir(im_path))
+                    #if os.path.splitext(fname)[-1] == '.jpg'))
 im_fnames = (os.path.join(im_path, fname) for fname in im_fnames)
+#im_fnames = 'demo/robust_adpatch.png'
 pool = Pool(processes=1)
 
 for i, (image, im_data) in enumerate(pool.imap(
         preprocess, im_fnames, chunksize=1)):
     t_total.tic()
+    
     im_data = net_utils.np_to_variable(
         im_data, is_cuda=True, volatile=True).permute(0, 3, 1, 2)
     t_det.tic()
-    bbox_pred, iou_pred, prob_pred = net(im_data)
+    bbox_pred, iou_pred, prob_pred = net(im_data, attack=args.attack)
     det_time = t_det.toc()
     # to numpy
     bbox_pred = bbox_pred.data.cpu().numpy()
@@ -66,6 +72,8 @@ for i, (image, im_data) in enumerate(pool.imap(
 
     bboxes, scores, cls_inds = yolo_utils.postprocess(
         bbox_pred, iou_pred, prob_pred, image.shape, cfg, thresh)
+   
+    print("predicted class index", cls_inds)
 
     im2show = yolo_utils.draw_detection(image, bboxes, scores, cls_inds, cfg)
 
@@ -74,8 +82,8 @@ for i, (image, im_data) in enumerate(pool.imap(
                              (int(1000. *
                                   float(im2show.shape[1]) / im2show.shape[0]),
                               1000))
-    cv2.imshow('test', im2show)
-
+    #cv2.imshow('test', im2show)
+    cv2.imwrite("demo/%d_attack.png"%i, im2show)
     total_time = t_total.toc()
     # wait_time = max(int(60 - total_time * 1000), 1)
     cv2.waitKey(0)

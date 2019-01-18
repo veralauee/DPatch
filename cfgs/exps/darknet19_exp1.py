@@ -6,7 +6,7 @@ start_step = 0
 lr_decay_epochs = {60, 90}
 lr_decay = 1./10
 
-max_epoch = 160
+max_epoch = 100
 
 weight_decay = 0.0005
 momentum = 0.9
@@ -23,4 +23,4 @@ iou_thresh = 0.6
 imdb_train = 'voc_2007_trainval'
 imdb_test = 'voc_2007_test'
 batch_size = 1
-train_batch_size = 16
+train_batch_size = 1

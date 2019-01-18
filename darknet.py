@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 
 import utils.network as net_utils
 import cfgs.config as cfg
@@ -12,6 +13,7 @@ from functools import partial
 
 from multiprocessing import Pool
 
+from patch import *
 
 def _make_layers(in_channels, net_cfg):
     layers = []
@@ -138,7 +140,7 @@ def _process_batch(data, size_index):
 
 
 class Darknet19(nn.Module):
-    def __init__(self):
+    def __init__(self, training=True):
         super(Darknet19, self).__init__()
 
         net_cfgs = [
@@ -179,13 +181,30 @@ class Darknet19(nn.Module):
         self.iou_loss = None
         self.cls_loss = None
         self.pool = Pool(processes=10)
+       
+        ''' define a patch here '''
+        # training
+        if training:
+           self.patch = nn.Parameter(torch.rand(1,3, cfg.img_w, cfg.img_h),requires_grad=True)
+        # testing
+        else:
+           self.patch = cfg.patch.cuda()
+
 
     @property
     def loss(self):
         return self.bbox_loss + self.iou_loss + self.cls_loss
 
     def forward(self, im_data, gt_boxes=None, gt_classes=None, dontcare=None,
-                size_index=0):
+                size_index=0, attack=None):
+        
+        # add patch here
+        if attack is not None:
+           for k in range(im_data.size(0)):
+              im_data[k] = add_patch(im_data[k], self.patch)
+              #torchvision.utils.save_image(im_data[k], 'tensor.png')
+        
+
         conv1s = self.conv1s(im_data)
         conv2 = self.conv2(conv1s)
         conv3 = self.conv3(conv2)
@@ -217,6 +236,11 @@ class Darknet19(nn.Module):
         if self.training:
             bbox_pred_np = bbox_pred.data.cpu().numpy()
             iou_pred_np = iou_pred.data.cpu().numpy()
+         
+            # re-define ground truth box for patch
+            for g in gt_boxes:
+                g=[cfg.patch_x, cfg.patch_y, cfg.patch_x+cfg.patch_w, cfg.patch_y+cfg.patch_h]
+               
             _boxes, _ious, _classes, _box_mask, _iou_mask, _class_mask = \
                 self._build_target(bbox_pred_np,
                                    gt_boxes,
