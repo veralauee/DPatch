@@ -1,4 +1,4 @@
-## DPatch: An Adversarial Patch Attack on Object Detectors
+# DPatch: An Adversarial Patch Attack on Object Detectors
 This is a [PyTorch](https://github.com/pytorch/pytorch)
 implementation of DPATCH.
 Please refer to the paper https://arxiv.org/abs/1806.02299
