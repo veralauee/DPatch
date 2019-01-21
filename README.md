@@ -54,7 +54,6 @@ The trained DPATCH are saved in trained_patch/${target_class}/
     ```bash
     python train.py
     ```
-[![Watch the video](https://img.youtube.com/vi/-aPbU9q1gFU/maxresdefault.jpg)](https://youtu.be/-aPbU9q1gFU)
     
 ## Test
 Download a trained DPATCH https://drive.google.com/open?id=1_G5xXWIJWNGuss4KZbBQ9pMvuthmL_wc , or you can test your trained DPatch and set the path in cfgs/config.py (Line 102) 
@@ -69,4 +68,5 @@ The demo pictures are saved in demo/patch, the detection results are saved in de
     ```bash
     python demo.py
     ```
-https://youtu.be/-aPbU9q1gFU
+Click here to watch the video demo.
+[![Watch the video](https://img.youtube.com/vi/-aPbU9q1gFU/maxresdefault.jpg)](https://youtu.be/-aPbU9q1gFU)
