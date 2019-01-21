@@ -68,5 +68,6 @@ The demo pictures are saved in demo/patch, the detection results are saved in de
     ```bash
     python demo.py
     ```
-Click here to watch the video demo.
+    
+Click the following picture to watch the video demo.
 [![Watch the video](https://img.youtube.com/vi/-aPbU9q1gFU/maxresdefault.jpg)](https://youtu.be/-aPbU9q1gFU)
