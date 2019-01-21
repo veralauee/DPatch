@@ -68,3 +68,4 @@ The demo pictures are saved in demo/patch, the detection results are saved in de
     ```bash
     python demo.py
     ```
+https://youtu.be/-aPbU9q1gFU
